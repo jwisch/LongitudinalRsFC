@@ -1,0 +1,17 @@
+#Function for date matching
+MatchbyNearestDate<-function(df1, df2, ID, Date1, Date2){
+  z <- lapply(intersect(df1[,ID],df2[,ID]),function(id) {
+    df1 <- df1[df1[,ID] == id,]
+    df2 <- df2[df2[,ID] == id,]
+    
+    df1[,"indices"] <- sapply(df1[,Date1],function(d) which.min(abs(df2[,Date2] - d)))
+    df2[,"indices"] <- 1:nrow(df2)
+    
+    merge(df1,df2,by=c(ID,'indices'))
+  })
+  
+  df_matched <- do.call(rbind,z)
+  df_matched$indices <- NULL
+  return(df_matched)
+  
+}
