@@ -1,5 +1,5 @@
 #############################################################################################
-####Functions for Analysis
+####Libraries for Analysis
 #############################################################################################
 setwd("C:/Users/wischj/Documents/R/")
 #Functions I use.....
@@ -15,148 +15,8 @@ library(stargazer)
 library(dplyr)
 library(tableone)
 
-
-grid_arrange_shared_legend <- function(...) {
-  plots <- list(...)
-  g <- ggplotGrob(plots[[1]] + theme(legend.position="bottom"))$grobs
-  legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
-  lheight <- sum(legend$height)
-  grid.arrange(
-    do.call(arrangeGrob, lapply(plots, function(x)
-      x + theme(legend.position="none"))),
-    legend,
-    ncol = 1,
-    heights = unit.c(unit(1, "npc") - lheight, lheight))}
-
-MatchbyNearestDate<-function(dataframe1, dataframe2, IDcolumnName, datedf1, datedf2){
-  df.combined<-merge(dataframe1, dataframe2, by = IDcolumnName)
-  unique.id<-unique(df.combined[,IDcolumnName])
-  k<-1
-  df.result<-df.combined[FALSE,]
-  for(i in 1:length(unique(df.combined[,IDcolumnName]))){
-    df.working<-subset(df.combined, df.combined[,IDcolumnName] == unique.id[i])
-    scandates<-unique(df.working[,datedf1])
-    for(j in 1:length(scandates)){
-      df.working2<-subset(df.working, df.working[,datedf1] == scandates[j])
-      ind.val<-which.min(abs(df.working2[,datedf1]-df.working2[,datedf2]))
-      df.result[k,]<-df.working2[ind.val,]
-      k<-k+1
-    }
-  }
-  return(df.result)
-}
-
-var_coord_func <- function(loadings, comp.sdev){
-  loadings*comp.sdev}
-
-contrib <- function(var.cos2, comp.cos2){var.cos2/comp.cos2}
-
-MakeBarPlots<-function(Component, ComponentTitle){
-  theme_set(theme_bw())  
-  pcaPlot<-as.data.frame(Component)
-  pcaPlot<-cbind(rownames(pcaPlot), pcaPlot[,1])
-  colnames(pcaPlot)<-c("region", "contribution")
-  pcaPlot<-as.data.frame(pcaPlot)
-  pcaPlot$contribution<-as.numeric(as.character(pcaPlot$contribution))
-  pcaPlot <- pcaPlot[order(-pcaPlot$contribution), ]  # sort
-  # Diverging Barcharts
-  p<-ggplot(pcaPlot, aes(x=reorder(region, contribution), y = contribution, label=contribution)) + 
-    geom_bar(stat='identity', width=.5)  +
-    #coord_cartesian(ylim = c(-0.4, 0.4)) +
-    scale_y_continuous(limits = c(0, 0.15))+
-    labs(subtitle="Explains 25% of the data variance", 
-         title= ComponentTitle) + 
-    coord_flip() + ylab("Proportion of Contribution") + xlab("")
-  theme(legend.position = "none")
-  return(p)}
-
-
-LikelihoodRatioTests_RandInt<-function(MEASURE, df){
-  significancetests<-list()
-  Model.Total.null<-lmer(MEASURE ~ cdr05+years+apoe4+cdr05:years+GENDER+EDUC+apoe4:years+(1|ID), df, REML = FALSE)
-  summary(Model.Total.null)
-  Model.Total<-lmer(MEASURE ~ cdr05+years+cdr05:years+GENDER+EDUC+(1|ID), df, REML = FALSE)
-  significancetests[[1]]<-anova(Model.Total.null, Model.Total) #no APOE effect
-  Model.Total<-lmer(MEASURE ~ cdr05+years+apoe4+cdr05:years+GENDER+apoe4:years+(1|ID), df, REML = FALSE)
-  significancetests[[2]]<-anova(Model.Total.null, Model.Total) #no ed effect
-  Model.Total<-lmer(MEASURE ~ cdr05+years+apoe4+cdr05:years+EDUC+apoe4:years+(1|ID), df, REML = FALSE)
-  significancetests[[3]]<-anova(Model.Total.null, Model.Total) #significant gender effect p = 7.8e-03
-  Model.Total<-lmer(MEASURE ~ years+apoe4+GENDER+EDUC+apoe4:years+(1|ID), df, REML = FALSE)
-  significancetests[[4]]<-anova(Model.Total.null, Model.Total) #converter or not is not significant
-  Model.Total<-lmer(MEASURE ~ cdr05+apoe4+GENDER+EDUC+(1|ID), df, REML = FALSE)
-  significancetests[[5]]<-anova(Model.Total.null, Model.Total) #significant time effect p = 1.48e-14
-  Model.Total<-lmer(MEASURE ~ cdr05+years+apoe4+GENDER+EDUC+apoe4:years+(1|ID), df, REML = FALSE)
-  significancetests[[6]]<-anova(Model.Total.null, Model.Total) #no significant interaction cdr*years
-  Model.Total<-lmer(MEASURE ~ cdr05+years+apoe4+cdr05:years+GENDER+EDUC+(1|ID), df, REML = FALSE)
-  significancetests[[7]]<-anova(Model.Total.null, Model.Total) #no significant interaction apoe*years
-  return(significancetests)}
-
-#getting z scores on a region by region basis
-normalize<-function(PARAM){
-  (PARAM - mean(PARAM))/sd(PARAM)
-}
-
-set.seed(23)
-MultipleCorrelations <- function(DF, ResponseVariable, formula) {
-  model.correct<-lmer(formula, DF)
-  DF[,"Corrected_Parameter"]<-fitted(model.correct)
-  #DF[,"ResponseVariable"]<-ResponseVariable
-  result<-rmcorr(DF[,"ID"], DF[,"FCSummary"], ResponseVariable, DF, CIs = "bootstrap",  nreps = 1000)
-  return(result)
-}
-
-
-#partial correlation without multiple measures
-pcorr_eqn <- function(x,y, variablestocontrolfor = NULL, digits = 4) {
-  corr_coef <- round(pcor.test(x, y, variablestocontrolfor, method = "spearman")$estimate, digits = digits)
-  #p_val<-round(spearman.test(x, y)$p.value, digits = digits)
-  p_val<-formatC(pcor.test(x, y, variablestocontrolfor, method = "spearman")$p.value, digits = digits)
-  paste("R =  ", corr_coef, "\n p =  ", p_val)
-}
-
-pcorr_eqn_All <- function(x,y, variablestocontrolfor = NULL, digits = 4) {
-  corr_coef <- round(pcor.test(x, y, variablestocontrolfor, method = "spearman")$estimate, digits = digits)
-  #p_val<-round(spearman.test(x, y)$p.value, digits = digits)
-  p_val<-formatC(pcor.test(x, y, variablestocontrolfor, method = "spearman")$p.value, digits = digits)
-  paste("R =  ", corr_coef, ", p =  ", p_val)
-}
-
-ATNplot<-function(DATAFRAME, X_param, Y_param, rmcorrOUTPUT_r, rmcorrOUTPUT_p, YLABEL, YPOS = 0.9){
-  pformat<-ifelse(rmcorrOUTPUT_p < 0.001, formatC(rmcorrOUTPUT_p, format = "e", digits = 3), round(rmcorrOUTPUT_p, 4))
-  ggplot(data = DATAFRAME, aes(x = X_param, y = Y_param, group = ID, colour = cdr05, shape = cdr05))+ 
-    geom_line(alpha = 0.6)+ 
-    geom_point(alpha = 0.6)+scale_color_manual("", values = c( "#FFB000", "#1437AD"))+
-    scale_shape_manual("", values = c(1, 17))+
-    xlab("FC Summary Value") + ylab(YLABEL)+
-    geom_smooth(aes(x = Measure1, y = Measure2, group = 123), method = "lm", colour = "gray38")+
-    scale_x_continuous(limits = c(-5, 5))+
-    geom_text(aes(x = -5, y = 0.99*max(Y_param), 
-                  label = paste("R = ", round(rmcorrOUTPUT_r, 4), sep = ""), vjust = "inward", hjust = "inward"), colour = "black")+
-    geom_text(aes(x = -5, y = YPOS*max(Y_param), 
-                  label = paste("p = ", pformat, sep = ""), vjust = "inward", hjust = "inward"), colour = "black")
-}
-
-plotSetUp<-function(DATAFRAME, PARTICIPANT, MEASURE1, MEASURE2){
-  data.results<-as.data.frame(cbind(PARTICIPANT, MEASURE1, MEASURE2))
-  colnames(data.results)<-c("ParticipantNo", "Measure1", "Measure2")
-  df.plot<-as.data.frame(cbind(DATAFRAME, data.results))
-  return(df.plot)}
-
-
 source("C:/Users/wischj/Documents/PracticeData/Cathy/CommonFuncs.R")
-
-CleanUpDates<-function(DF){
-  if("first05" %in% names(DF)){DF[,"first05"]<-as.Date(DF[,"first05"], origin="1960-01-01")}
-  if("cdr05" %in% names(DF)){DF[,"cdr05"]<-as.factor(DF[,"cdr05"])}
-  if("ID" %in% names(DF)){DF[,"ID"]<-as.factor(DF[,"ID"])}
-  if("BIRTH" %in% names(DF)){as.Date(format(as.Date(DF[,"BIRTH"], format = "%Y-%m-%d"), "19%y-%m-%d"), format = "%Y-%m-%d")}
-  if("PET_Date" %in% names(DF)){DF[,"PET_Date"]<-as.Date(DF[,"PET_Date"], format = "%m/%d/%Y")
-  if("years" %in% names(DF)){DF[,"years"]<-difftime(DF[,"PET_Date"], df[,"first05"], units = "weeks")
-  DF[,"years"]<-as.numeric(DF[,"years"]/52)}}
-  if("Session_Date" %in% names(DF)){DF[,"Session_Date"]<-as.Date(DF[,"Session_Date"], format="%Y-%m-%d")}
-  return(DF)}
-
-normalize<-function(PARAM){(PARAM - mean(PARAM))/sd(PARAM)}
+source("W:/ances/julie/Cathy/LongitudinalFC_Functions.R")
 
 #############################################################################################
 #############################################################################################
@@ -197,14 +57,47 @@ df<-df[!(df$ID %in% Converters_toDrop),] #dropping everyone with squishy diagnos
 df$cdr05<-as.factor(df$cdr05)
 df$cdr05<-revalue(df$cdr05, c("0" = "Non-Converter", "1" = "Converter"))
 
-rm(ADIDs, Converters, Converters_toDrop, OtherIDs, DX)
+#######################################
+#Now getting the ids of amyloid positive individuals as signs of AD pathology
+#dropping everyone with AD pathology who is a non converter to clean up our groups
+df.drop<-read.csv("C:/Users/wischj/Documents/SecretData/Schindler_CSF_2018_10_10.csv")
+df.drop<-df.drop[,c("ID", "AMYLOID", "pTau_Ab42_10")]
+df.drop<-df.drop[df.drop$AMYLOID == 1 | df.drop$pTau_Ab42_10 == 1,]
+NonConverters<-unique(df[df$cdr05 == "Non-Converter","ID"])
+df.drop<-NonConverters[NonConverters %in% df.drop$ID] #59 individuals are amyloid positive but not converters
+df<-df[!(df$ID %in% df.drop),]#This doesn't give too few participants.  Still have 290 non converters
+#########################################
+
+rm(ADIDs, Converters, Converters_toDrop, OtherIDs, DX, df.drop)
 #############################################################################################
+#Correcting for atrophy per Reviewer 2
+df.MRI<-read.csv("C:/Users/wischj/Documents/SecretData/HASD_ACS_DR14_3TMR.csv")
+df.MRI$ADsig<-(normalize(df.MRI$MR_LV_INFRTMP)+normalize(df.MRI$MR_RV_MIDTMP)+normalize(df.MRI$MR_LV_SUPERTMP)+
+                 normalize(df.MRI$MR_RV_INFRTMP)+normalize(df.MRI$MR_LV_MIDTMP)+normalize(df.MRI$MR_RV_SUPERTMP)+
+                 normalize(df.MRI$MR_RV_INFRPRTL)+normalize(df.MRI$MR_RV_SUPERPRTL)+
+                 normalize(df.MRI$MR_LV_INFRPRTL)+normalize(df.MRI$MR_LV_SUPERPRTL)+
+                 normalize(df.MRI$MR_LV_PRECUNEUS)+normalize(df.MRI$MR_RV_PRECUNEUS))/12
+
+df.MRI$HippoVol<-(normalize(df.MRI$MR_LV_HIPPOCAMPUS)+normalize(df.MRI$MR_RV_HIPPOCAMPUS))/2
+df.MRI$MR_Date<-as.Date(df.MRI$MR_Date, format = "%m/%d/%Y")
+df.MRI<-MatchbyNearestDate(df[,c(1:9, 101:195)], df.MRI[, c(1:9, 344:345)], "ID", "Session_Date", "MR_Date") 
+
+#Use below if you want to correct for atrophy
+# library(lme4)
+# for(i in 13:103){
+# model<-lmer(df.MRI[,i] ~ HippoVol + (1|ID), data = df.MRI)
+# as.data.frame(coef(model)$ID)[1, 2]
+# df.MRI[,i]<- df.MRI[,i] -  as.data.frame(coef(model)$ID)[1, 2] * df.MRI$HippoVol }
 
 #############################################################################################
 #PCA Analysis to get signature
 df_pca<-df
+df_pca[,104:194]<-df.MRI[,13:103] #Regression correction
 df_pca <- prcomp(df_pca[,c(104, 117, 129, 140, 150, 159, 167, 174, 180, 185, 189, 192, 194)], scale. = TRUE) #pca for just intranetwork, 25% of variance
 df$FCSummary<-as.numeric(as.matrix(df[,c(104, 117, 129, 140, 150, 159, 167, 174, 180, 185, 189, 192, 194)])%*%df_pca$rotation[,1] )
+df.MRI$FCSummary<-as.numeric(as.matrix(df.MRI[,c(104-91, 117-91, 129-91, 140-91, 150-91, 159-91,
+                                                 167-91, 174-91, 180-91, 185-91, 189-91, 192-91, 194-91)])%*%df_pca$rotation[,1] )
+
 loadings <- df_pca$rotation
 sdev <- df_pca$sdev
 var.coord <- t(apply(loadings, 1, var_coord_func, sdev)) 
@@ -230,7 +123,7 @@ rm(loadings, var.contrib, var.coord, var.cos2, comp.cos2, sdev)
 #900x578
 ggplot(data = df, aes(x = years, y = FCSummary, group = ID, colour = cdr05, shape = cdr05))+ geom_line(alpha = 0.3)+ geom_point(alpha = 0.6)+
   scale_color_manual("", values = c( "#FFB000", "#1437AD"))+ scale_shape_manual("", values = c(1, 17))+
-  geom_smooth(aes(group = cdr05), method = "lm")+
+  geom_smooth(aes(group = cdr05), method = "lm")+ylim(c(-6, 6))+
   xlab("Years to Onset")+ylab("Intranetwork rs-fc Signature")
 #############################################################################################
 
@@ -262,17 +155,6 @@ df.tau<-df.tau[!duplicated(df.tau[,c("ID", "PET_Date")]),]
 df.tau$ID<-as.factor(df.tau$ID)
 df.tau$ID<-droplevels(df.tau$ID)
 
-df.MRI<-read.csv("C:/Users/wischj/Documents/SecretData/HASD_ACS_DR14_3TMR.csv")
-df.MRI$ADsig<-normalize(df.MRI$wm.lh.inferiortemporal)+normalize(df.MRI$wm.lh.middletemporal)+normalize(df.MRI$wm.lh.superiortemporal)+
-  normalize(df.MRI$wm.rh.inferiortemporal)+normalize(df.MRI$wm.rh.middletemporal)+normalize(df.MRI$wm.rh.superiortemporal)+
-  normalize(df.MRI$wm.lh.inferiorparietal)+normalize(df.MRI$wm.lh.superiorparietal)+
-  normalize(df.MRI$wm.rh.inferiorparietal)+normalize(df.MRI$wm.rh.superiorparietal)+
-  normalize(df.MRI$wm.lh.precuneus)+normalize(df.MRI$wm.rh.precuneus)+
-  normalize(df.MRI$MR_LV_PRECUNEUS)+normalize(df.MRI$MR_RV_PRECUNEUS)+
-  normalize(df.MRI$MR_LT_PRECUNEUS)+normalize(df.MRI$MR_RT_PRECUNEUS)
-df.MRI$HippoVol<-(normalize(df.MRI$MR_LV_HIPPOCAMPUS)+normalize(df.MRI$MR_RV_HIPPOCAMPUS))/2
-df.MRI$MR_Date<-as.Date(df.MRI$MR_Date, format = "%m/%d/%Y")
-df.MRI<-MatchbyNearestDate(df[,c(1:9, 101:103, 195:196)], df.MRI[, c(1:9, 344:345)], "ID", "Session_Date", "MR_Date") 
 
 df.CSF<-read.csv("C:/Users/wischj/Documents/SecretData/Schindler_CSF_2018_10_10.csv")
 colnames(df.CSF)[15]<-"LP_date"
@@ -369,7 +251,11 @@ rownames(df.results)[7]<-"ptau"
 #############################################################################################
 #Content for Tables
 LikelihoodRatioTests_RandInt(df$FCSummary, df)
+#If you correct for neurodegeneration, then cdr05, years, and cdr05:years are significant
 Model<-lmer(FCSummary ~ cdr05 + years + apoe4 + cdr05:years +  GENDER + EDUC + apoe4:years + (1 | ID), data = df)
+
+
+
 stargazer(Model, title = "Linear Mixed Effect Model Regression Results", 
           align= TRUE, type = "html", out = "W:/ances/julie/Cathy/Tables.htm",
           covariate.labels=c("Non-Converter", "Years to Onset", "APOE4+", "Sex", "Education", "Non-Converter:Years to Onset",
@@ -423,14 +309,14 @@ p.Hippo<-ATNplot(df.MRI.plot, df.MRI.plot$FCSummary, df.MRI.plot$HippoVol, datar
 
 
 df.CSF.plot<-plotSetUp(df.CSF.classic, datareturn[[5]]$model$model$Participant, datareturn[[5]]$model$model$Measure1, datareturn[[5]]$model$model$Measure2)
-p.AB42<-ATNplot(df.CSF.plot, df.CSF.plot$FCSummary, df.CSF.plot$E_ab42, datareturn[[5]]$r, datareturn[[5]]$p, "CSF - AB42 [pg/mL]")
+p.AB42<-ATNplot(df.CSF.plot[,c("ID", "FCSummary", "E_ab42", "cdr05", "Measure1", "Measure2")], df.CSF.plot$FCSummary, df.CSF.plot$E_ab42, datareturn[[5]]$r, datareturn[[5]]$p, "CSF - AB42 [pg/mL]")
 
 df.CSF.classic.plot<-plotSetUp(df.CSF.classic, datareturn[[6]]$model$model$Participant, datareturn[[6]]$model$model$Measure1, datareturn[[6]]$model$model$Measure2)
-p.CSFtau<-ATNplot(df.CSF.classic.plot, df.CSF.classic.plot$FCSummary, df.CSF.classic.plot$E_tau, datareturn[[6]]$r, datareturn[[6]]$p, "CSF - tau [pg/mL]")
+p.CSFtau<-ATNplot(df.CSF.classic.plot[,c("ID", "FCSummary", "E_tau", "cdr05", "Measure1", "Measure2")], df.CSF.classic.plot$FCSummary, df.CSF.classic.plot$E_tau, datareturn[[6]]$r, datareturn[[6]]$p, "CSF - tau [pg/mL]")
 
 
 df.CSF.classic.plot<-plotSetUp(df.CSF.classic, datareturn[[7]]$model$model$Participant, datareturn[[7]]$model$model$Measure1, datareturn[[7]]$model$model$Measure2)
-p.CSFptau<-ATNplot(df.CSF.classic.plot, df.CSF.classic.plot$FCSummary, df.CSF.classic.plot$E_ptau, datareturn[[7]]$r, datareturn[[7]]$p, "CSF - ptau [pg/mL]")
+p.CSFptau<-ATNplot(df.CSF.classic.plot[,c("ID", "FCSummary", "E_ptau", "cdr05", "Measure1", "Measure2")], df.CSF.classic.plot$FCSummary, df.CSF.classic.plot$E_ptau, datareturn[[7]]$r, datareturn[[7]]$p, "CSF - ptau [pg/mL]")
 
 #625x700
 grid.arrange(p.pib, p.AB42)
@@ -438,3 +324,6 @@ p.CSFptau
 p.PETtau #900 x 700
 grid.arrange(p.ADsig, p.Hippo, p.CSFtau)
 #############################################################################################
+
+res <- df %>% group_by(ID, cdr05) %>% summarise(Freq=n())
+table(res$Freq, res$cdr05)
