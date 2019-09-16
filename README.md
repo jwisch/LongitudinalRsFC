@@ -6,12 +6,12 @@ Anne M. Fagan PhD, Tammie L. Benzinger MD, PhD, John C. Morris MD, Beau M. Ances
 
 
 This is the code associated with the analysis for Functional Connectivity Changes Associated with Conversion to Alzheimer Disease
-This manuscript was initially submitted on 5/12/2019 to Neurology.
+This manuscript was initially submitted in September 2019 to Alzheimer's and Dementia.
 
 
 ABSTRACT 
-Importance: This study longitudinally assesses intra-network resting state functional connectivity (rs-fc) changes in the pathological progression to symptomatic Alzheimer disease (AD). Rs-fc changes were assessed with respect to the current Amyloid-Tau-Neurodegeneration (A-T-N) biomarker framework for AD. 
-Objective: 1) Identify a global rs-fc signature, composed of a weighted combination of intra-network connections, that differentiated cognitively normal individuals from symptomatic AD. 2) Assess when changes in the intra-network rs-fc signature occur relative to symptomatic conversion to AD. 3) Evaluate the intra-network rs-fc signature with regards to AD biomarkers previously encapsulated by the A-T-N framework
-Design, Setting, and Participants: We analyzed intra-network rs-fc in a longitudinal cohort of cognitively normal older individuals (n = 335) followed at the Knight Alzheimer Disease Research Center who did or did not subsequently develop sporadic AD. Biomarkers, including cerebrospinal fluid (CSF) (Aβ42 and tau), structural magnetic resonance imaging (volumetrics), and positron emission tomography (PET) amyloid and tau were obtained.
-Results: The main source of variance in intra-network rs-fc signature was primary sensory networks. Intra-network rs-fc changes occurred more than three years before conversion to symptomatic AD. Intra-network rs-fc was most strongly correlated with markers of neurodegeneration and not amyloid or tau biomarkers.
-Conclusions and Relevance: Changes in intra-network rs-fc occur near conversion to symptomatic AD and could serve as a biomarker for evaluating potential therapies later in disease progression. Our results suggest that intra-network rs-fc is a neurodegenerative biomarker in the currently proposed A-T-N framework. 
+Objectives: 1) Identify a resting state functional connectivity (rs-fc) signature that differentiates cognitively normal individuals from symptomatic Alzheimer Disease (AD). 2) Assess when longitudinal changes in rs-fc occur relative to conversion to symptomatic AD. 3) Evaluate rs-fc intranetwork connectivity with regards to AD biomarkers using an Amyloid-Tau(Neurodegeneration) (AT(N)) framework
+Methods: A global rs-fc signature was analyzed in a longitudinal cohort (n = 335). Biomarkers, including cerebrospinal fluid (Aβ42 and tau), structural magnetic resonance imaging, and positron emission tomography were obtained.
+Results: Rs-fc measures that emphasized global intranetwork connectivity distinguished cognitively normal individuals from symptomatic AD better than individual intranetwork connections. Changes occurred nearly four years before conversion to symptomatic AD. Intranetwork rs-fc signature most strongly correlated with neurodegeneration markers. 
+Conclusions: Change in rs-fc occurred near symptomatic onset and is likely a neurodegenerative biomarker within the AT(N) framework. Rs-fc changes could serve as a biomarker for evaluating potential therapies. 
+
